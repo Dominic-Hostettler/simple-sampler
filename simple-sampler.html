@@ -43,8 +43,7 @@
       --knob-border: #374151;
       --knob-active: #4ade80;
       --knob-indicator: #22c55e;
-      --dragover-color: #22c55e;
-      --dragover-glow: rgba(34, 197, 94, 0.2);
+
       --label: #9ca3af;
       --value: #e5e7eb;
       --muted: #6b7280;
@@ -55,9 +54,8 @@
     body { font-family: var(--font); background-color: var(--bg-body); color: #f3f4f6; }
     .title { font-family: 'Orbitron', sans-serif; }
     .step-grid { display: grid; gap: 0.375rem; }
-    .knob.inactive { opacity: 0.2; }
+
     #tracks .track { background-color: var(--bg-panel); border-color: var(--border-panel); border-radius: var(--radius-box); }
-    .track.dragover { border-color: var(--dragover-color); box-shadow: 0 0 0 2px var(--dragover-glow); }
     .track.muted .track-name { color: var(--muted); }
     .step {
       aspect-ratio: 1;
@@ -75,17 +73,7 @@
     .step.half-red { background: var(--step-half-red); border-color: var(--step-half-red-border); }
     .step.half-yellow { background: var(--step-half-yellow); border-color: var(--step-half-yellow-border); }
     .step.current { outline: 2px solid var(--step-current); outline-offset: 2px; }
-    .drop-zone {
-      border: 2px dashed var(--drop-border);
-      border-radius: var(--radius);
-      padding: 0.5rem;
-      text-align: center;
-      font-size: 0.75rem;
-      color: var(--label);
-      cursor: pointer;
-      transition: all 120ms ease;
-    }
-    .drop-zone:hover, .drop-zone.dragover { border-color: var(--drop-hover); color: var(--drop-hover); background: var(--drop-bg); }
+
     .preset-row { display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
     .save-btn, .preset-btn {
       height: 2.5rem;
@@ -396,7 +384,6 @@
         { key: 'distortion', label: 'Dist' }
       ],
       muted: false,
-      buffer: null,
       presets: [],
       patternPresets: [],
       synth: playKick
@@ -419,7 +406,6 @@
         { key: 'distortion', label: 'Dist' }
       ],
       muted: false,
-      buffer: null,
       presets: [],
       patternPresets: [],
       synth: playSnare
@@ -442,7 +428,6 @@
         { key: 'distortion', label: 'Dist' }
       ],
       muted: false,
-      buffer: null,
       presets: [],
       patternPresets: [],
       synth: playHiHat
@@ -464,21 +449,7 @@
     dist.curve = makeDistortionCurve(track.params.distortion);
     dist.oversample = '4x';
     dist.connect(audioCtx.destination);
-    if (track.buffer) {
-      const source = audioCtx.createBufferSource();
-      source.buffer = track.buffer;
-      const tuneParam = track.params.pitch !== undefined ? track.params.pitch : (track.params.tone !== undefined ? track.params.tone : 0.5);
-      source.playbackRate.value = lerp(0.5, 2.0, tuneParam);
-      const g = audioCtx.createGain();
-      const decay = lerp(0.05, 2.0, track.params.decay);
-      g.gain.setValueAtTime(track.params.gain * stepGain, time);
-      g.gain.exponentialRampToValueAtTime(0.001, time + decay);
-      source.connect(g).connect(dist);
-      source.start(time);
-      source.stop(time + decay);
-    } else if (track.synth) {
-      track.synth(audioCtx, time, track, stepGain, dist);
-    }
+    track.synth(audioCtx, time, track, stepGain, dist);
   }
 
   function nextNote() {
@@ -641,13 +612,12 @@
       infoCol.className = 'flex flex-col gap-3 w-full lg:w-48';
       infoCol.innerHTML = `
         <div class="flex items-center justify-between gap-2 flex-wrap">
-          <button class="track-name font-bold text-${track.color}-400 text-lg text-left bg-transparent border-0 p-0 cursor-pointer hover:opacity-80" title="Klicken, um Sound auszuwählen">${track.name}</button>
+          <span class="track-name font-bold text-${track.color}-400 text-lg">${track.name}</span>
           <div class="flex items-center gap-2">
             <button class="default-btn text-xs px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 border border-gray-700">Default</button>
             <button class="mute-btn text-xs px-2 py-1 rounded bg-gray-800 hover:bg-gray-700 border border-gray-700">${track.muted ? 'Unmute' : 'Mute'}</button>
           </div>
         </div>
-        <input type="file" accept="audio/*" class="hidden file-input">
       `;
 
       // Knob column
@@ -747,8 +717,6 @@
       const defaultBtn = root.querySelector('.default-btn');
       defaultBtn.addEventListener('click', () => {
         track.params = { ...track.defaultParams };
-        track.buffer = null;
-        track.sampleData = null;
         track.synth = track.defaultSynth;
         track.name = track.defaultName;
         renderTracks();
@@ -761,39 +729,6 @@
         const knobDef = track.knobs.find(k => k.key === key);
         if (knobDef) attachKnob(knobEl, track, knobDef);
       });
-
-      // Drag & drop / file input
-      const trackNameBtn = root.querySelector('.track-name');
-      const fileInput = root.querySelector('.file-input');
-      trackNameBtn.addEventListener('click', () => fileInput.click());
-      fileInput.addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (file) loadSample(file, track, root);
-      });
-
-      // Whole track is a drop target
-      let dragCounter = 0;
-      root.addEventListener('dragenter', e => {
-        if (!e.dataTransfer.types.includes('Files')) return;
-        dragCounter++;
-        root.classList.add('dragover');
-      });
-      root.addEventListener('dragleave', e => {
-        if (!e.dataTransfer.types.includes('Files')) return;
-        dragCounter--;
-        if (dragCounter === 0) root.classList.remove('dragover');
-      });
-      root.addEventListener('dragover', e => e.preventDefault());
-      root.addEventListener('drop', e => {
-        e.preventDefault();
-        e.stopPropagation();
-        dragCounter = 0;
-        root.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file) loadSample(file, track, root);
-      });
-
-      updateKnobActivity(track, root);
 
       trackEls.push({ root, stepButtons });
     });
@@ -844,88 +779,22 @@
     });
   }
 
-  // ---------- Knob activity ----------
-  function updateKnobActivity(track, root) {
-    const tuneParam = track.params.pitch !== undefined ? 'pitch' : 'tone';
-    const activeParams = [tuneParam, 'decay', 'gain', 'distortion'];
-    root.querySelectorAll('.knob').forEach(knobEl => {
-      const key = knobEl.dataset.key;
-      knobEl.classList.toggle('inactive', !!track.buffer && !activeParams.includes(key));
-    });
-  }
-
-  // ---------- Sample loading ----------
-  async function loadSample(file, track, root) {
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      track.sampleData = arrayBuffer.slice(0);
-      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-      track.buffer = audioBuffer;
-      track.synth = null;
-      track.name = file.name;
-      root.querySelector('.track-name').textContent = file.name;
-      updateKnobActivity(track, root);
-      saveState();
-    } catch (err) {
-      alert('Konnte Sound nicht laden: ' + file.name);
-      console.error(err);
-    }
-  }
-
-  // ---------- Persistence helpers ----------
-  function arrayBufferToBase64(buffer) {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-  }
-
-  function base64ToArrayBuffer(base64) {
-    const binary = window.atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes.buffer;
-  }
-
   function saveState() {
     const data = {
       bpm,
-      tracks: tracks.map(track => {
-        const t = {
-          id: track.id,
-          name: track.name,
-          steps: track.steps,
-          params: track.params,
-          presets: track.presets,
-          patternPresets: track.patternPresets,
-          muted: track.muted,
-          sample: null
-        };
-        if (track.sampleData) {
-          try {
-            t.sample = arrayBufferToBase64(track.sampleData);
-          } catch (e) {
-            console.warn('Sample too large to persist', e);
-          }
-        }
-        return t;
-      })
+      tracks: tracks.map(track => ({
+        id: track.id,
+        steps: track.steps,
+        params: track.params,
+        presets: track.presets,
+        patternPresets: track.patternPresets,
+        muted: track.muted
+      }))
     };
     try {
       localStorage.setItem('simpelSamplerState', JSON.stringify(data));
     } catch (e) {
-      // fallback: try without samples
-      const minimal = { ...data, tracks: data.tracks.map(t => ({ ...t, sample: null })) };
-      try {
-        localStorage.setItem('simpelSamplerState', JSON.stringify(minimal));
-      } catch (e2) {
-        console.warn('Could not save sampler state', e2);
-      }
+      console.warn('Could not save sampler state', e);
     }
   }
 
@@ -953,18 +822,6 @@
         if (st.params) track.params = { ...track.params, ...st.params };
         if (st.presets) track.presets = st.presets;
         if (st.patternPresets) track.patternPresets = st.patternPresets;
-        if (st.sample) {
-          try {
-            track.sampleData = base64ToArrayBuffer(st.sample);
-            track.buffer = await audioCtx.decodeAudioData(track.sampleData);
-            track.synth = null;
-            if (st.name) track.name = st.name;
-          } catch (err) {
-            console.warn('Could not restore sample for track', track.id, err);
-            track.sampleData = null;
-            track.buffer = null;
-          }
-        }
       }
     } catch (err) {
       console.error('Failed to load sampler state', err);
