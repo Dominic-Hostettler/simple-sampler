@@ -52,92 +52,7 @@
       --radius-box: 0.75rem;
       --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    body[data-theme="retro"] {
-      --bg-body: #050505;
-      --bg-panel: #000000;
-      --border-panel: #00ffff;
-      --btn-bg: #000000;
-      --btn-border: #00ffff;
-      --btn-hover: #003333;
-      --step-bg: #000000;
-      --step-border: #00ffff;
-      --step-hover: #001a1a;
-      --step-on-green: #00ff00;
-      --step-on-green-border: #00ff00;
-      --step-half-green: rgba(0, 255, 0, 0.45);
-      --step-half-green-border: rgba(0, 255, 0, 0.6);
-      --step-on-red: #ff00aa;
-      --step-on-red-border: #ff00aa;
-      --step-half-red: rgba(255, 0, 170, 0.45);
-      --step-half-red-border: rgba(255, 0, 170, 0.6);
-      --step-on-yellow: #ffff00;
-      --step-on-yellow-border: #ffff00;
-      --step-half-yellow: rgba(255, 255, 0, 0.45);
-      --step-half-yellow-border: rgba(255, 255, 0, 0.6);
-      --glow-green: rgba(0, 255, 0, 0.45);
-      --glow-red: rgba(255, 0, 170, 0.45);
-      --glow-yellow: rgba(255, 255, 0, 0.45);
-      --step-current: #ffffff;
-      --drop-border: #00ffff;
-      --drop-hover: #ff00ff;
-      --drop-bg: rgba(255, 0, 255, 0.08);
-      --knob-bg: #000000;
-      --knob-border: #00ffff;
-      --knob-active: #ff00ff;
-      --knob-indicator: #00ffff;
-      --dragover-color: #ff00ff;
-      --dragover-glow: rgba(255, 0, 255, 0.25);
-      --label: #00ffff;
-      --value: #e5e7eb;
-      --muted: #444444;
-      --radius: 0;
-      --radius-box: 0;
-      --font: 'Courier New', Courier, monospace;
-    }
-    body[data-theme="minimal"] {
-      --bg-body: #0a0a0a;
-      --bg-panel: #111111;
-      --border-panel: #262626;
-      --btn-bg: #171717;
-      --btn-border: #333333;
-      --btn-hover: #262626;
-      --step-bg: #171717;
-      --step-border: #262626;
-      --step-hover: #262626;
-      --step-on-green: #e5e5e5;
-      --step-on-green-border: #ffffff;
-      --step-half-green: rgba(229, 229, 229, 0.35);
-      --step-half-green-border: rgba(255, 255, 255, 0.5);
-      --step-on-red: #e5e5e5;
-      --step-on-red-border: #ffffff;
-      --step-half-red: rgba(229, 229, 229, 0.35);
-      --step-half-red-border: rgba(255, 255, 255, 0.5);
-      --step-on-yellow: #e5e5e5;
-      --step-on-yellow-border: #ffffff;
-      --step-half-yellow: rgba(229, 229, 229, 0.35);
-      --step-half-yellow-border: rgba(255, 255, 255, 0.5);
-      --glow-green: transparent;
-      --glow-red: transparent;
-      --glow-yellow: transparent;
-      --step-current: #ffffff;
-      --drop-border: #333333;
-      --drop-hover: #666666;
-      --drop-bg: rgba(255, 255, 255, 0.03);
-      --knob-bg: #171717;
-      --knob-border: #262626;
-      --knob-active: #666666;
-      --knob-indicator: #888888;
-      --dragover-color: #666666;
-      --dragover-glow: rgba(102, 102, 102, 0.25);
-      --label: #737373;
-      --value: #d4d4d4;
-      --muted: #404040;
-      --radius: 0.125rem;
-      --radius-box: 0.25rem;
-      --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    body { font-family: var(--font); }
-    body[data-theme] { background-color: var(--bg-body); color: #f3f4f6; }
+    body { font-family: var(--font); background-color: var(--bg-body); color: #f3f4f6; }
     .title { font-family: 'Orbitron', sans-serif; }
     .step-grid { display: grid; gap: 0.375rem; }
     .knob.inactive { opacity: 0.2; }
@@ -225,17 +140,6 @@
     footer .bg-gray-800:hover, button.default-btn:hover, button.mute-btn:hover { background-color: var(--btn-hover); }
     #playBtn { border-radius: var(--radius); }
     .knob-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem 0.75rem; justify-items: center; padding-bottom: 22px; }
-    .knob-row.minimized { grid-template-columns: 1fr; }
-    .knob-row.minimized .knob-data { display: none; }
-    .knob-row.minimized .knob-minimize { grid-column: 1; grid-row: 1; }
-    .knob-minimize {
-      width: 48px; height: 48px;
-      border-radius: var(--radius);
-      background: transparent; border: 2px dashed var(--drop-border); color: var(--label);
-      cursor: pointer; user-select: none; -webkit-user-select: none;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .knob-minimize:hover { border-color: var(--knob-active); color: var(--knob-active); }
     .knob {
       width: 64px;
       height: 64px;
@@ -284,7 +188,7 @@
     input[type=range] { accent-color: var(--knob-indicator); }
   </style>
 </head>
-<body data-theme="default" class="bg-gray-950 text-gray-100 min-h-screen flex flex-col items-center p-4 md:p-8">
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col items-center p-4 md:p-8">
 
   <header class="w-full mb-8">
     <h1 class="text-3xl font-extrabold tracking-tight title">Simpel Sampler</h1>
@@ -300,18 +204,12 @@
         <svg width='28' height='28' viewBox='0 0 24 24' fill='currentColor'><polygon points='5,3 21,12 5,21'></polygon></svg>
       </button>
       <button id='clearBtn' class='px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-medium transition'>Clear</button>
-      <button id='defaultBtn' class='px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-medium transition'>Default</button>
-      <button id='stepsBtn' class='px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-medium transition'>16 Steps</button>
       <div class="flex items-center gap-2 bg-gray-900 px-3 py-2 rounded-lg border border-gray-800">
         <label for="bpm" class="text-sm text-gray-400">BPM</label>
         <input id="bpm" type="range" min="60" max="200" value="120" class="w-32">
         <span id="bpmVal" class="text-sm font-mono w-8">120</span>
       </div>
-      <select id="themeSelect" class="bg-gray-900 border border-gray-800 text-gray-100 text-sm rounded-lg px-3 py-2 outline-none focus:border-green-500">
-        <option value="default">Default</option>
-        <option value="retro">Retro</option>
-        <option value="minimal">Minimal</option>
-      </select>
+
     </div>
   </footer>
 
@@ -346,20 +244,6 @@
   function waveAt(v) {
     return waveTypes[Math.min(waveTypes.length - 1, Math.floor(v * waveTypes.length))];
   }
-
-  const collapseIcon = `<svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
-    <polyline points='9,3 12,6 15,3'></polyline>
-    <polyline points='3,9 6,12 3,15'></polyline>
-    <polyline points='21,9 18,12 21,15'></polyline>
-    <polyline points='9,21 12,18 15,21'></polyline>
-  </svg>`;
-
-  const expandIcon = `<svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
-    <polyline points='9,6 12,3 15,6'></polyline>
-    <polyline points='6,9 3,12 6,15'></polyline>
-    <polyline points='18,9 21,12 18,15'></polyline>
-    <polyline points='9,18 12,21 15,18'></polyline>
-  </svg>`;
 
   const playIcon = `<svg width='28' height='28' viewBox='0 0 24 24' fill='currentColor'><polygon points='5,3 21,12 5,21'></polygon></svg>`;
   const stopIcon = `<svg width='28' height='28' viewBox='0 0 24 24' fill='currentColor'><rect x='4' y='4' width='16' height='16' rx='2'></rect></svg>`;
@@ -492,14 +376,14 @@
   }
 
   // ---------- State ----------
-  let numSteps = 16;
+  const numSteps = 16;
   const tracks = [
     {
       id: 0,
       name: 'Kick',
       color: 'green',
       steps: [true,false,false,false, true,false,false,false, true,false,false,false, true,false,false,false],
-      defaultSteps: [true,false,false,false, true,false,false,false, true,false,false,false, true,false,false,false],
+
       params: { pitch: 0.25, bend: 0.8, decay: 0.4, timbre: 0.0, punch: 0.3, gain: 1.0, distortion: 0.0 },
       defaultName: 'Kick', defaultSynth: playKick, defaultParams: { pitch: 0.25, bend: 0.8, decay: 0.4, timbre: 0.0, punch: 0.3, gain: 1.0, distortion: 0.0 },
       knobs: [
@@ -522,7 +406,7 @@
       name: 'Snare',
       color: 'red',
       steps: [false,false,false,false, true,false,false,false, false,false,false,false, true,false,false,false],
-      defaultSteps: [false,false,false,false, true,false,false,false, false,false,false,false, true,false,false,false],
+
       params: { tone: 0.3, wave: 0.3, snap: 0.15, noise: 0.7, decay: 0.35, gain: 1.0, distortion: 0.0 },
       defaultName: 'Snare', defaultSynth: playSnare, defaultParams: { tone: 0.3, wave: 0.3, snap: 0.15, noise: 0.7, decay: 0.35, gain: 1.0, distortion: 0.0 },
       knobs: [
@@ -545,7 +429,7 @@
       name: 'Hi-Hat',
       color: 'yellow',
       steps: [true,false,true,false, true,false,true,false, true,false,true,false, true,false,true,false],
-      defaultSteps: [true,false,true,false, true,false,true,false, true,false,true,false, true,false,true,false],
+
       params: { pitch: 0.45, resonance: 0.2, decay: 0.15, body: 0.4, mix: 0.2, gain: 0.7, distortion: 0.0 },
       defaultName: 'Hi-Hat', defaultSynth: playHiHat, defaultParams: { pitch: 0.45, resonance: 0.2, decay: 0.15, body: 0.4, mix: 0.2, gain: 0.7, distortion: 0.0 },
       knobs: [
@@ -565,7 +449,6 @@
     }
   ];
 
-  let showKnobs = true;
   let bpm = 120;
   let isPlaying = false;
   let currentStep = 0;
@@ -769,9 +652,9 @@
 
       // Knob column
       const knobCol = document.createElement('div');
-      knobCol.className = 'knob-col w-full ' + (showKnobs ? 'lg:w-80' : 'lg:w-20');
+      knobCol.className = 'knob-col w-full lg:w-80';
       knobCol.innerHTML = `
-        <div class="knob-row ${showKnobs ? '' : 'minimized'}">
+        <div class="knob-row">
           ${track.knobs.map(k => `
             <div class="knob knob-data" data-key="${k.key}" aria-label="${k.label}">
               <div class="knob-indicator"></div>
@@ -779,7 +662,6 @@
               <div class="knob-value">0</div>
             </div>
           `).join('')}
-          <button class="knob-minimize" aria-label="Toggle knobs">${showKnobs ? collapseIcon : expandIcon}</button>
         </div>
       `;
 
@@ -878,17 +760,6 @@
         const key = knobEl.dataset.key;
         const knobDef = track.knobs.find(k => k.key === key);
         if (knobDef) attachKnob(knobEl, track, knobDef);
-      });
-
-      // Minimize knobs
-      const minBtn = root.querySelector('.knob-minimize');
-      minBtn.addEventListener('click', () => {
-        showKnobs = !showKnobs;
-        const newWidth = showKnobs ? 'lg:w-80' : 'lg:w-20';
-        document.querySelectorAll('.knob-row').forEach(r => r.classList.toggle('minimized', !showKnobs));
-        document.querySelectorAll('.knob-minimize').forEach(b => b.innerHTML = showKnobs ? collapseIcon : expandIcon);
-        document.querySelectorAll('.knob-col').forEach(c => c.className = 'knob-col w-full ' + newWidth);
-        saveState();
       });
 
       // Drag & drop / file input
@@ -1024,9 +895,6 @@
   function saveState() {
     const data = {
       bpm,
-      numSteps,
-      showKnobs,
-      theme: document.body.dataset.theme,
       tracks: tracks.map(track => {
         const t = {
           id: track.id,
@@ -1066,20 +934,12 @@
     if (!raw) return;
     try {
       const data = JSON.parse(raw);
-      if (data.numSteps) {
-        numSteps = data.numSteps;
-        stepsBtn.textContent = numSteps + ' Steps';
-      }
       if (data.bpm) {
         bpm = data.bpm;
         bpmInput.value = bpm;
         bpmVal.textContent = bpm;
       }
-      if (data.showKnobs !== undefined) showKnobs = data.showKnobs;
-      if (data.theme) {
-        document.body.dataset.theme = data.theme;
-        if (themeSelect) themeSelect.value = data.theme;
-      }
+
       for (const st of data.tracks) {
         const track = tracks.find(t => t.id === st.id);
         if (!track) continue;
@@ -1112,13 +972,11 @@
   }
 
   // ---------- Controls ----------
-  const stepsBtn = document.getElementById('stepsBtn');
-  const defaultBtn = document.getElementById('defaultBtn');
   const playBtn = document.getElementById('playBtn');
   const clearBtn = document.getElementById('clearBtn');
   const bpmInput = document.getElementById('bpm');
   const bpmVal = document.getElementById('bpmVal');
-  const themeSelect = document.getElementById('themeSelect');
+
   async function startPlayback() {
     if (isPlaying) return;
     if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -1151,38 +1009,13 @@
     saveState();
   });
 
-  defaultBtn.addEventListener('click', () => {
-    tracks.forEach(track => track.steps = expandSteps(track.defaultSteps || track.steps, numSteps));
-    renderTracks();
-    saveState();
-  });
-
-  stepsBtn.addEventListener('click', () => {
-    if (isPlaying) playBtn.click();
-    numSteps = numSteps === 16 ? 32 : 16;
-    stepsBtn.textContent = numSteps + ' Steps';
-    tracks.forEach(track => {
-      if (numSteps > track.steps.length) {
-        track.steps = [...track.steps, ...new Array(numSteps - track.steps.length).fill(false)];
-      } else {
-        track.steps = track.steps.slice(0, numSteps);
-      }
-    });
-    currentStep = 0;
-    renderTracks();
-    saveState();
-  });
-
   bpmInput.addEventListener('input', e => {
     bpm = parseInt(e.target.value, 10);
     bpmVal.textContent = bpm;
     saveState();
   });
 
-  themeSelect.addEventListener('change', e => {
-    document.body.dataset.theme = e.target.value;
-    saveState();
-  });
+
 
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
