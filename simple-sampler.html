@@ -171,6 +171,45 @@
       transition: all 120ms ease;
     }
     .drop-zone:hover, .drop-zone.dragover { border-color: var(--drop-hover); color: var(--drop-hover); background: var(--drop-bg); }
+    .preset-row { display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
+    .save-btn, .preset-btn {
+      height: 2.5rem;
+      border-radius: var(--radius);
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--value);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 80ms ease;
+    }
+    .save-btn { padding: 0 1.5rem; font-size: 1.1rem; cursor: grab; }
+    .preset-btn { width: 2.5rem; }
+    .save-btn:hover, .preset-btn:hover { background: var(--btn-hover); }
+    .preset-btn.dragover { border-color: var(--drop-hover); color: var(--drop-hover); background: var(--drop-bg); }
+    .preset-item { position: relative; display: inline-flex; }
+    .preset-del {
+      position: absolute;
+      top: -0.375rem;
+      right: -0.375rem;
+      width: 0.875rem;
+      height: 0.875rem;
+      font-size: 0.625rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--label);
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 80ms ease;
+    }
+    .preset-item:hover .preset-del, .preset-item:focus-within .preset-del { opacity: 1; pointer-events: auto; }
+    .preset-del:hover { color: var(--drop-hover); border-color: var(--drop-hover); }
     footer .bg-gray-900 { background-color: var(--bg-panel); border-color: var(--border-panel); border-radius: var(--radius-box); }
     footer .bg-gray-800, button.default-btn, button.mute-btn {
       background-color: var(--btn-bg);
@@ -469,6 +508,8 @@
       ],
       muted: false,
       buffer: null,
+      presets: [],
+      patternPresets: [],
       synth: playKick
     },
     {
@@ -490,6 +531,8 @@
       ],
       muted: false,
       buffer: null,
+      presets: [],
+      patternPresets: [],
       synth: playSnare
     },
     {
@@ -511,6 +554,8 @@
       ],
       muted: false,
       buffer: null,
+      presets: [],
+      patternPresets: [],
       synth: playHiHat
     }
   ];
@@ -585,6 +630,75 @@
     btn.dataset.track = track.id;
   }
 
+  function renderPresetRow(track, row, label, presets, snapshot, restore) {
+    row.innerHTML = '';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-btn';
+    saveBtn.textContent = label;
+    saveBtn.title = label + ' speichern (auf Zahl ziehen zum Überschreiben)';
+    saveBtn.draggable = true;
+    saveBtn.addEventListener('click', () => {
+      presets.push(snapshot());
+      renderPresetRow(track, row, label, presets, snapshot, restore);
+      saveState();
+    });
+    saveBtn.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('application/x-preset-save', '');
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    row.appendChild(saveBtn);
+
+    presets.forEach((preset, i) => {
+      const item = document.createElement('span');
+      item.className = 'preset-item';
+      const b = document.createElement('button');
+      b.className = 'preset-btn';
+      b.textContent = i + 1;
+      b.title = 'Klicken zum Laden, × zum Löschen';
+      b.addEventListener('click', () => {
+        restore(preset);
+        renderTracks();
+        saveState();
+      });
+      b.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        presets.splice(i, 1);
+        renderPresetRow(track, row, label, presets, snapshot, restore);
+        saveState();
+      });
+      b.addEventListener('dragover', e => {
+        if (e.dataTransfer.types.includes('application/x-preset-save')) {
+          e.preventDefault();
+          b.classList.add('dragover');
+        }
+      });
+      b.addEventListener('dragleave', () => b.classList.remove('dragover'));
+      b.addEventListener('drop', e => {
+        if (!e.dataTransfer.types.includes('application/x-preset-save')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        b.classList.remove('dragover');
+        presets[i] = snapshot();
+        renderPresetRow(track, row, label, presets, snapshot, restore);
+        saveState();
+      });
+      const del = document.createElement('button');
+      del.className = 'preset-del';
+      del.textContent = '×';
+      del.title = 'Löschen';
+      del.addEventListener('click', e => {
+        e.stopPropagation();
+        presets.splice(i, 1);
+        renderPresetRow(track, row, label, presets, snapshot, restore);
+        saveState();
+      });
+      item.appendChild(b);
+      item.appendChild(del);
+      row.appendChild(item);
+    });
+  }
+
   // ---------- UI rendering ----------
   function renderTracks() {
     const container = document.getElementById('tracks');
@@ -642,9 +756,28 @@
         stepButtons.push(btn);
       }
 
+      // Preset rows under the steps: sound settings + step pattern
+      const soundRow = document.createElement('div');
+      soundRow.className = 'preset-row';
+      renderPresetRow(track, soundRow, 'Sound', track.presets,
+        () => ({ ...track.params }),
+        preset => { track.params = { ...preset }; });
+
+      const patternRow = document.createElement('div');
+      patternRow.className = 'preset-row';
+      renderPresetRow(track, patternRow, 'Pattern', track.patternPresets,
+        () => [...track.steps],
+        preset => { track.steps = expandSteps(preset, numSteps); });
+
+      const stepsCol = document.createElement('div');
+      stepsCol.className = 'flex-1 flex flex-col gap-2';
+      stepsCol.appendChild(stepsContainer);
+      stepsCol.appendChild(soundRow);
+      stepsCol.appendChild(patternRow);
+
       root.appendChild(infoCol);
       root.appendChild(knobCol);
-      root.appendChild(stepsContainer);
+      root.appendChild(stepsCol);
       container.appendChild(root);
 
       // Mute
@@ -697,11 +830,13 @@
 
       // Whole track is a drop target
       let dragCounter = 0;
-      root.addEventListener('dragenter', () => {
+      root.addEventListener('dragenter', e => {
+        if (!e.dataTransfer.types.includes('Files')) return;
         dragCounter++;
         root.classList.add('dragover');
       });
-      root.addEventListener('dragleave', () => {
+      root.addEventListener('dragleave', e => {
+        if (!e.dataTransfer.types.includes('Files')) return;
         dragCounter--;
         if (dragCounter === 0) root.classList.remove('dragover');
       });
@@ -826,6 +961,8 @@
           name: track.name,
           steps: track.steps,
           params: track.params,
+          presets: track.presets,
+          patternPresets: track.patternPresets,
           muted: track.muted,
           sample: null
         };
@@ -882,6 +1019,8 @@
           track.steps = track.steps.slice(0, numSteps);
         }
         if (st.params) track.params = { ...track.params, ...st.params };
+        if (st.presets) track.presets = st.presets;
+        if (st.patternPresets) track.patternPresets = st.patternPresets;
         if (st.sample) {
           try {
             track.sampleData = base64ToArrayBuffer(st.sample);
