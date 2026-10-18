@@ -1,0 +1,331 @@
+// Entry module: renders the tracks and wires up all controls.
+
+import { audioCtx } from './synth.js';
+import { instruments } from './instruments/index.js';
+import {
+  events, state, tracks, fitSteps, canEdit, play, stop, setBpm, shareTrack, resetSound,
+  claimTrack, releaseTrack, addTrack, removeTrack, NUM_STEPS, MAX_TRACKS,
+} from './sequencer.js';
+import { connect, isOnline, roomId } from './net.js';
+import { saveState, loadState } from './storage.js';
+import { attachKnob } from './knobs.js';
+import { attachSoundPresets, attachPatternPresets } from './presets.js';
+
+const playIcon = `<svg width='28' height='28' viewBox='0 0 24 24' fill='currentColor'><polygon points='5,3 21,12 5,21'></polygon></svg>`;
+const stopIcon = `<svg width='28' height='28' viewBox='0 0 24 24' fill='currentColor'><rect x='4' y='4' width='16' height='16' rx='2'></rect></svg>`;
+
+// Leading + trailing throttle; flush() runs a pending call immediately.
+function throttle(fn, ms) {
+  let timer = null;
+  let pending = null;
+  function run() {
+    if (!pending) { timer = null; return; }
+    fn(...pending);
+    pending = null;
+    timer = setTimeout(run, ms);
+  }
+  const throttled = (...args) => {
+    pending = args;
+    if (!timer) run();
+  };
+  throttled.flush = () => {
+    clearTimeout(timer);
+    run();
+  };
+  return throttled;
+}
+
+// ---------- Steps ----------
+function updateStepVisual(step) {
+  document.querySelectorAll('.step.current').forEach(el => el.classList.remove('current'));
+  document.querySelectorAll(`.step[data-step="${step}"]`).forEach(el => el.classList.add('current'));
+}
+
+function updateStepButton(btn, track, step) {
+  const v = Number(track.steps[step]);
+  const current = btn.classList.contains('current');
+  const color = track.instrument.color;
+  btn.className = `step ${v === 1 ? 'on-' + color : ''} ${v === 0.25 ? 'half-' + color : ''}`;
+  btn.classList.toggle('current', current);
+  btn.dataset.step = step;
+  btn.dataset.track = track.id;
+}
+
+// ---------- Tracks ----------
+// track id -> { track, instrument, root, refresh }; refresh() updates the track's DOM in place
+const trackViews = new Map();
+
+// Changes a field of a track you may edit, then shares, redraws and saves it.
+function editTrack(track, field, change) {
+  if (!canEdit(track)) return;
+  change();
+  shareTrack(track, field);
+  trackViews.get(track.id).refresh();
+  saveState();
+}
+
+// Brings the DOM in line with the track list. Views of unchanged tracks stay
+// in place, so a drag on them survives other tracks being added or removed.
+function syncTracks() {
+  const container = document.getElementById('tracks');
+  trackViews.forEach((view, id) => {
+    const track = tracks.find(t => t.id === id);
+    if (track && view.track === track && view.instrument === track.instrument) return;
+    view.root.remove();
+    trackViews.delete(id);
+  });
+  let prev = null;
+  tracks.forEach(track => {
+    if (!trackViews.has(track.id)) trackViews.set(track.id, renderTrack(track));
+    const { root } = trackViews.get(track.id);
+    const expected = prev ? prev.nextElementSibling : container.firstElementChild;
+    if (root !== expected) container.insertBefore(root, expected);
+    prev = root;
+  });
+  updateAddBar();
+}
+
+function renderTrack(track) {
+  const { instrument } = track;
+  const root = document.createElement('div');
+  root.className = 'track panel';
+
+  // Info column: name, claim, default, mute, remove
+  const infoCol = document.createElement('div');
+  infoCol.className = 'track-info';
+  infoCol.innerHTML = `
+    <div class="track-header">
+      <span class="track-name color-${instrument.color}">${instrument.name}</span>
+      <div class="track-buttons">
+        <button class="claim-btn btn btn-sm"></button>
+        <button class="default-btn btn btn-sm">Default</button>
+        <button class="mute-btn btn btn-sm"></button>
+        <button class="remove-btn btn btn-sm" title="Remove this instrument for everyone" aria-label="Remove">&times;</button>
+      </div>
+    </div>
+  `;
+
+  // Knob column
+  const knobCol = document.createElement('div');
+  knobCol.className = 'knob-col';
+  knobCol.innerHTML = `
+    <div class="knob-row">
+      ${instrument.knobs.map(k => `
+        <div class="knob knob-data" data-key="${k.key}" aria-label="${k.label}">
+          <div class="knob-indicator"></div>
+          <div class="knob-label">${k.label}</div>
+          <div class="knob-value">0</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Steps
+  const stepsContainer = document.createElement('div');
+  stepsContainer.className = 'steps step-grid';
+  stepsContainer.style.gridTemplateColumns = `repeat(${NUM_STEPS}, minmax(0, 1fr))`;
+  const stepButtons = [];
+  for (let s = 0; s < NUM_STEPS; s++) {
+    const btn = document.createElement('button');
+    updateStepButton(btn, track, s);
+    btn.addEventListener('click', () => {
+      if (!canEdit(track)) return;
+      const v = Number(track.steps[s]);
+      track.steps[s] = v === 0 ? 1 : (v === 1 ? 0.25 : 0);
+      updateStepButton(btn, track, s);
+      shareTrack(track, 'steps');
+      saveState();
+    });
+    stepsContainer.appendChild(btn);
+    stepButtons.push(btn);
+  }
+
+  // Preset rows under the steps: sound settings + step pattern
+  const soundRow = document.createElement('div');
+  soundRow.className = 'preset-row';
+  const updateSoundRow = attachSoundPresets(soundRow, track, editTrack);
+
+  const patternRow = document.createElement('div');
+  patternRow.className = 'preset-row';
+  const updatePatternRow = attachPatternPresets(patternRow, track, editTrack);
+
+  const stepsCol = document.createElement('div');
+  stepsCol.className = 'steps-col';
+  stepsCol.appendChild(stepsContainer);
+  stepsCol.appendChild(soundRow);
+  stepsCol.appendChild(patternRow);
+
+  root.appendChild(infoCol);
+  root.appendChild(knobCol);
+  root.appendChild(stepsCol);
+
+  // Claim
+  const claimBtn = root.querySelector('.claim-btn');
+  claimBtn.addEventListener('click', () => {
+    if (track.owner === 'me') releaseTrack(track);
+    else if (!track.owner) claimTrack(track);
+  });
+
+  // Mute
+  const muteBtn = root.querySelector('.mute-btn');
+  muteBtn.addEventListener('click', () => editTrack(track, 'muted', () => { track.muted = !track.muted; }));
+
+  // Remove
+  const removeBtn = root.querySelector('.remove-btn');
+  removeBtn.addEventListener('click', () => {
+    if (canEdit(track) && confirm(`Remove ${instrument.name}? Its presets are lost for everyone.`)) removeTrack(track);
+  });
+
+  // Default
+  const defaultBtn = root.querySelector('.default-btn');
+  defaultBtn.addEventListener('click', () => {
+    if (!canEdit(track)) return;
+    resetSound(track);
+    saveState();
+  });
+
+  // Knobs
+  const shareKnobs = throttle(() => shareTrack(track, 'params'), 50);
+  const knobUpdates = [];
+  root.querySelectorAll('.knob').forEach(knobEl => {
+    const key = knobEl.dataset.key;
+    const knobDef = instrument.knobs.find(k => k.key === key);
+    if (knobDef) knobUpdates.push(attachKnob(knobEl, track, knobDef, shareKnobs));
+  });
+
+  function refresh() {
+    stepButtons.forEach((btn, s) => updateStepButton(btn, track, s));
+    knobUpdates.forEach(update => update());
+    updateSoundRow();
+    updatePatternRow();
+    root.classList.toggle('mine', track.owner === 'me');
+    root.classList.toggle('locked', !canEdit(track));
+    root.classList.toggle('muted', track.muted);
+    muteBtn.textContent = track.muted ? 'Unmute' : 'Mute';
+    muteBtn.disabled = !canEdit(track);
+    removeBtn.disabled = !canEdit(track);
+    claimBtn.hidden = !isOnline();
+    claimBtn.disabled = track.owner === 'other';
+    claimBtn.textContent = track.owner === 'me' ? 'Release' : track.owner === 'other' ? 'Taken' : 'Claim';
+    claimBtn.title = track.owner === 'me' ? 'Your instrument; release it so others can take it'
+      : track.owner === 'other' ? 'Another player owns this instrument'
+      : 'Free: anyone can edit it. Claim it to make it yours';
+  }
+  refresh();
+  return { track, instrument, root, refresh };
+}
+
+// ---------- Adding tracks ----------
+const addBar = document.getElementById('addBar');
+instruments.forEach(instrument => {
+  const btn = document.createElement('button');
+  btn.className = `btn btn-sm add-btn color-${instrument.color}`;
+  btn.textContent = '+ ' + instrument.name;
+  btn.addEventListener('click', () => addTrack(instrument));
+  addBar.appendChild(btn);
+});
+
+function updateAddBar() {
+  const full = tracks.length >= MAX_TRACKS;
+  addBar.querySelectorAll('button').forEach(btn => {
+    btn.disabled = full;
+    btn.title = full ? `At most ${MAX_TRACKS} instruments` : 'Add a free instrument';
+  });
+}
+
+// ---------- Controls ----------
+const playBtn = document.getElementById('playBtn');
+const clearBtn = document.getElementById('clearBtn');
+const bpmInput = document.getElementById('bpm');
+const bpmVal = document.getElementById('bpmVal');
+const joinOverlay = document.getElementById('joinOverlay');
+const shareBtn = document.getElementById('shareBtn');
+
+// While dragging, the slider shows the local value instead of server echoes
+let bpmDragging = false;
+function setBpmUI(value) {
+  if (bpmDragging) return;
+  bpmInput.value = value;
+  bpmVal.textContent = value;
+}
+
+const setBpmThrottled = throttle(setBpm, 100);
+
+events.addEventListener('step', e => updateStepVisual(e.detail));
+
+events.addEventListener('transport', () => {
+  const playing = state.transport.playing;
+  setBpmUI(state.transport.bpm);
+  playBtn.innerHTML = playing ? stopIcon : playIcon;
+  playBtn.classList.toggle('playing', playing);
+  if (!playing) document.querySelectorAll('.step.current').forEach(el => el.classList.remove('current'));
+  saveState();
+});
+
+events.addEventListener('track', e => {
+  trackViews.get(e.detail.id)?.refresh();
+  saveState();
+});
+
+events.addEventListener('tracks', () => {
+  syncTracks();
+  saveState();
+});
+
+playBtn.addEventListener('click', () => {
+  if (state.transport.playing) stop();
+  else play();
+});
+
+// Clear only touches tracks you may edit: yours and free ones
+clearBtn.addEventListener('click', () => {
+  tracks.forEach(track => editTrack(track, 'steps', () => { track.steps = fitSteps([]); }));
+});
+
+shareBtn.hidden = !roomId;
+shareBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(location.href);
+    shareBtn.textContent = 'Copied!';
+    setTimeout(() => shareBtn.textContent = 'Copy room link', 1500);
+  } catch (err) {
+    // The clipboard API needs HTTPS; over plain LAN HTTP let the user copy it
+    window.prompt('Room link:', location.href);
+  }
+});
+
+bpmInput.addEventListener('pointerdown', () => { bpmDragging = true; });
+document.addEventListener('pointerup', () => {
+  if (!bpmDragging) return;
+  bpmDragging = false;
+  setBpmUI(state.transport.bpm);
+});
+bpmInput.addEventListener('input', e => {
+  const value = parseInt(e.target.value, 10);
+  bpmVal.textContent = value;
+  setBpmThrottled(value);
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (!joinOverlay.hidden) return;
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    playBtn.click();
+  }
+});
+
+// Prevent browser from opening dropped files
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => e.preventDefault());
+
+loadState();
+setBpmUI(state.transport.bpm);
+syncTracks();
+
+// Registered after loadState, so an empty room is seeded with the restored tracks
+document.getElementById('joinBtn').addEventListener('click', async () => {
+  await audioCtx.resume();
+  joinOverlay.hidden = true;
+  connect();
+});
