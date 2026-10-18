@@ -52,92 +52,7 @@
       --radius-box: 0.75rem;
       --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    body[data-theme="retro"] {
-      --bg-body: #050505;
-      --bg-panel: #000000;
-      --border-panel: #00ffff;
-      --btn-bg: #000000;
-      --btn-border: #00ffff;
-      --btn-hover: #003333;
-      --step-bg: #000000;
-      --step-border: #00ffff;
-      --step-hover: #001a1a;
-      --step-on-green: #00ff00;
-      --step-on-green-border: #00ff00;
-      --step-half-green: rgba(0, 255, 0, 0.45);
-      --step-half-green-border: rgba(0, 255, 0, 0.6);
-      --step-on-red: #ff00aa;
-      --step-on-red-border: #ff00aa;
-      --step-half-red: rgba(255, 0, 170, 0.45);
-      --step-half-red-border: rgba(255, 0, 170, 0.6);
-      --step-on-yellow: #ffff00;
-      --step-on-yellow-border: #ffff00;
-      --step-half-yellow: rgba(255, 255, 0, 0.45);
-      --step-half-yellow-border: rgba(255, 255, 0, 0.6);
-      --glow-green: rgba(0, 255, 0, 0.45);
-      --glow-red: rgba(255, 0, 170, 0.45);
-      --glow-yellow: rgba(255, 255, 0, 0.45);
-      --step-current: #ffffff;
-      --drop-border: #00ffff;
-      --drop-hover: #ff00ff;
-      --drop-bg: rgba(255, 0, 255, 0.08);
-      --knob-bg: #000000;
-      --knob-border: #00ffff;
-      --knob-active: #ff00ff;
-      --knob-indicator: #00ffff;
-      --dragover-color: #ff00ff;
-      --dragover-glow: rgba(255, 0, 255, 0.25);
-      --label: #00ffff;
-      --value: #e5e7eb;
-      --muted: #444444;
-      --radius: 0;
-      --radius-box: 0;
-      --font: 'Courier New', Courier, monospace;
-    }
-    body[data-theme="minimal"] {
-      --bg-body: #0a0a0a;
-      --bg-panel: #111111;
-      --border-panel: #262626;
-      --btn-bg: #171717;
-      --btn-border: #333333;
-      --btn-hover: #262626;
-      --step-bg: #171717;
-      --step-border: #262626;
-      --step-hover: #262626;
-      --step-on-green: #e5e5e5;
-      --step-on-green-border: #ffffff;
-      --step-half-green: rgba(229, 229, 229, 0.35);
-      --step-half-green-border: rgba(255, 255, 255, 0.5);
-      --step-on-red: #e5e5e5;
-      --step-on-red-border: #ffffff;
-      --step-half-red: rgba(229, 229, 229, 0.35);
-      --step-half-red-border: rgba(255, 255, 255, 0.5);
-      --step-on-yellow: #e5e5e5;
-      --step-on-yellow-border: #ffffff;
-      --step-half-yellow: rgba(229, 229, 229, 0.35);
-      --step-half-yellow-border: rgba(255, 255, 255, 0.5);
-      --glow-green: transparent;
-      --glow-red: transparent;
-      --glow-yellow: transparent;
-      --step-current: #ffffff;
-      --drop-border: #333333;
-      --drop-hover: #666666;
-      --drop-bg: rgba(255, 255, 255, 0.03);
-      --knob-bg: #171717;
-      --knob-border: #262626;
-      --knob-active: #666666;
-      --knob-indicator: #888888;
-      --dragover-color: #666666;
-      --dragover-glow: rgba(102, 102, 102, 0.25);
-      --label: #737373;
-      --value: #d4d4d4;
-      --muted: #404040;
-      --radius: 0.125rem;
-      --radius-box: 0.25rem;
-      --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    body { font-family: var(--font); }
-    body[data-theme] { background-color: var(--bg-body); color: #f3f4f6; }
+    body { font-family: var(--font); background-color: var(--bg-body); color: #f3f4f6; }
     .title { font-family: 'Orbitron', sans-serif; }
     .step-grid { display: grid; gap: 0.375rem; }
     .knob.inactive { opacity: 0.2; }
@@ -171,6 +86,50 @@
       transition: all 120ms ease;
     }
     .drop-zone:hover, .drop-zone.dragover { border-color: var(--drop-hover); color: var(--drop-hover); background: var(--drop-bg); }
+    .preset-row { display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
+    .save-btn, .preset-btn {
+      height: 2.5rem;
+      border-radius: var(--radius);
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--value);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 80ms ease;
+    }
+    .save-btn { padding: 0 1.5rem; font-size: 1.1rem; cursor: grab; }
+    .preset-btn { width: 2.5rem; position: relative; }
+    .save-btn:hover, .preset-btn:hover { background: var(--btn-hover); }
+    .preset-btn.dragover { border-color: var(--drop-hover); color: var(--drop-hover); background: var(--drop-bg); }
+    .preset-bin {
+      height: 2.5rem;
+      width: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed var(--btn-border);
+      border-radius: var(--radius);
+      color: var(--label);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 80ms ease;
+    }
+    .preset-bin.active { opacity: 1; pointer-events: auto; }
+    .preset-bin.dragover { color: var(--drop-hover); border-color: var(--drop-hover); background: var(--drop-bg); }
+    .preset-bin svg { width: 55%; height: 55%; }
+    .preset-edge { position: absolute; transform: translate(-50%, -50%); pointer-events: none; }
+    .p-knob { width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--knob-bg); border: 1px solid var(--knob-border); }
+    .p-knob-ind {
+      position: absolute;
+      width: 1px;
+      height: 0.18rem;
+      background: var(--knob-indicator);
+      top: 1px;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 1px;
+    }
+    .p-sq { width: 0.25rem; height: 0.25rem; border-radius: 1px; box-sizing: border-box; }
     footer .bg-gray-900 { background-color: var(--bg-panel); border-color: var(--border-panel); border-radius: var(--radius-box); }
     footer .bg-gray-800, button.default-btn, button.mute-btn {
       background-color: var(--btn-bg);
@@ -181,17 +140,6 @@
     footer .bg-gray-800:hover, button.default-btn:hover, button.mute-btn:hover { background-color: var(--btn-hover); }
     #playBtn { border-radius: var(--radius); }
     .knob-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem 0.75rem; justify-items: center; padding-bottom: 22px; }
-    .knob-row.minimized { grid-template-columns: 1fr; }
-    .knob-row.minimized .knob-data { display: none; }
-    .knob-row.minimized .knob-minimize { grid-column: 1; grid-row: 1; }
-    .knob-minimize {
-      width: 48px; height: 48px;
-      border-radius: var(--radius);
-      background: transparent; border: 2px dashed var(--drop-border); color: var(--label);
-      cursor: pointer; user-select: none; -webkit-user-select: none;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .knob-minimize:hover { border-color: var(--knob-active); color: var(--knob-active); }
     .knob {
       width: 64px;
       height: 64px;
@@ -240,7 +188,7 @@
     input[type=range] { accent-color: var(--knob-indicator); }
   </style>
 </head>
-<body data-theme="default" class="bg-gray-950 text-gray-100 min-h-screen flex flex-col items-center p-4 md:p-8">
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col items-center p-4 md:p-8">
 
   <header class="w-full mb-8">
     <h1 class="text-3xl font-extrabold tracking-tight title">Simpel Sampler</h1>
@@ -256,18 +204,12 @@
         <svg width='28' height='28' viewBox='0 0 24 24' fill='currentColor'><polygon points='5,3 21,12 5,21'></polygon></svg>
       </button>
       <button id='clearBtn' class='px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-medium transition'>Clear</button>
-      <button id='defaultBtn' class='px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-medium transition'>Default</button>
-      <button id='stepsBtn' class='px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-medium transition'>16 Steps</button>
       <div class="flex items-center gap-2 bg-gray-900 px-3 py-2 rounded-lg border border-gray-800">
         <label for="bpm" class="text-sm text-gray-400">BPM</label>
         <input id="bpm" type="range" min="60" max="200" value="120" class="w-32">
         <span id="bpmVal" class="text-sm font-mono w-8">120</span>
       </div>
-      <select id="themeSelect" class="bg-gray-900 border border-gray-800 text-gray-100 text-sm rounded-lg px-3 py-2 outline-none focus:border-green-500">
-        <option value="default">Default</option>
-        <option value="retro">Retro</option>
-        <option value="minimal">Minimal</option>
-      </select>
+
     </div>
   </footer>
 
@@ -302,20 +244,6 @@
   function waveAt(v) {
     return waveTypes[Math.min(waveTypes.length - 1, Math.floor(v * waveTypes.length))];
   }
-
-  const collapseIcon = `<svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
-    <polyline points='9,3 12,6 15,3'></polyline>
-    <polyline points='3,9 6,12 3,15'></polyline>
-    <polyline points='21,9 18,12 21,15'></polyline>
-    <polyline points='9,21 12,18 15,21'></polyline>
-  </svg>`;
-
-  const expandIcon = `<svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
-    <polyline points='9,6 12,3 15,6'></polyline>
-    <polyline points='6,9 3,12 6,15'></polyline>
-    <polyline points='18,9 21,12 18,15'></polyline>
-    <polyline points='9,18 12,21 15,18'></polyline>
-  </svg>`;
 
   const playIcon = `<svg width='28' height='28' viewBox='0 0 24 24' fill='currentColor'><polygon points='5,3 21,12 5,21'></polygon></svg>`;
   const stopIcon = `<svg width='28' height='28' viewBox='0 0 24 24' fill='currentColor'><rect x='4' y='4' width='16' height='16' rx='2'></rect></svg>`;
@@ -448,14 +376,14 @@
   }
 
   // ---------- State ----------
-  let numSteps = 16;
+  const numSteps = 16;
   const tracks = [
     {
       id: 0,
       name: 'Kick',
       color: 'green',
       steps: [true,false,false,false, true,false,false,false, true,false,false,false, true,false,false,false],
-      defaultSteps: [true,false,false,false, true,false,false,false, true,false,false,false, true,false,false,false],
+
       params: { pitch: 0.25, bend: 0.8, decay: 0.4, timbre: 0.0, punch: 0.3, gain: 1.0, distortion: 0.0 },
       defaultName: 'Kick', defaultSynth: playKick, defaultParams: { pitch: 0.25, bend: 0.8, decay: 0.4, timbre: 0.0, punch: 0.3, gain: 1.0, distortion: 0.0 },
       knobs: [
@@ -469,6 +397,8 @@
       ],
       muted: false,
       buffer: null,
+      presets: [],
+      patternPresets: [],
       synth: playKick
     },
     {
@@ -476,7 +406,7 @@
       name: 'Snare',
       color: 'red',
       steps: [false,false,false,false, true,false,false,false, false,false,false,false, true,false,false,false],
-      defaultSteps: [false,false,false,false, true,false,false,false, false,false,false,false, true,false,false,false],
+
       params: { tone: 0.3, wave: 0.3, snap: 0.15, noise: 0.7, decay: 0.35, gain: 1.0, distortion: 0.0 },
       defaultName: 'Snare', defaultSynth: playSnare, defaultParams: { tone: 0.3, wave: 0.3, snap: 0.15, noise: 0.7, decay: 0.35, gain: 1.0, distortion: 0.0 },
       knobs: [
@@ -490,6 +420,8 @@
       ],
       muted: false,
       buffer: null,
+      presets: [],
+      patternPresets: [],
       synth: playSnare
     },
     {
@@ -497,7 +429,7 @@
       name: 'Hi-Hat',
       color: 'yellow',
       steps: [true,false,true,false, true,false,true,false, true,false,true,false, true,false,true,false],
-      defaultSteps: [true,false,true,false, true,false,true,false, true,false,true,false, true,false,true,false],
+
       params: { pitch: 0.45, resonance: 0.2, decay: 0.15, body: 0.4, mix: 0.2, gain: 0.7, distortion: 0.0 },
       defaultName: 'Hi-Hat', defaultSynth: playHiHat, defaultParams: { pitch: 0.45, resonance: 0.2, decay: 0.15, body: 0.4, mix: 0.2, gain: 0.7, distortion: 0.0 },
       knobs: [
@@ -511,11 +443,12 @@
       ],
       muted: false,
       buffer: null,
+      presets: [],
+      patternPresets: [],
       synth: playHiHat
     }
   ];
 
-  let showKnobs = true;
   let bpm = 120;
   let isPlaying = false;
   let currentStep = 0;
@@ -585,6 +518,115 @@
     btn.dataset.track = track.id;
   }
 
+  let draggedPreset = null; // { presets, index, rerender } while a preset button is being dragged
+
+  // Position of the i-th of n decorations on a ring just inside the button edge,
+  // clockwise starting from the top-left corner.
+  function edgePos(i, n) {
+    const a = 0.12;
+    const p = v => ((a + (1 - 2 * a) * v) * 100) + '%';
+    const t = ((i / n) * 4) % 4;
+    const s = Math.floor(t);
+    const u = t - s;
+    if (s === 0) return { left: p(u), top: p(0) };
+    if (s === 1) return { left: p(1), top: p(u) };
+    if (s === 2) return { left: p(1 - u), top: p(1) };
+    return { left: p(0), top: p(1 - u) };
+  }
+
+  function renderPresetRow(track, row, label, presets, snapshot, restore, decorate) {
+    row.innerHTML = '';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-btn';
+    saveBtn.textContent = label;
+    saveBtn.title = label + ' speichern (auf Zahl ziehen zum Überschreiben)';
+    saveBtn.draggable = true;
+    saveBtn.addEventListener('click', () => {
+      presets.push(snapshot());
+      renderPresetRow(track, row, label, presets, snapshot, restore, decorate);
+      saveState();
+    });
+    saveBtn.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('application/x-preset-save', '');
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    row.appendChild(saveBtn);
+
+    const binEl = document.createElement('div');
+    binEl.className = 'preset-bin';
+    binEl.title = 'Hierher ziehen zum Löschen';
+    binEl.innerHTML = `<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+      <polyline points='3 6 5 6 21 6'></polyline>
+      <path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'></path>
+      <line x1='10' y1='11' x2='10' y2='17'></line>
+      <line x1='14' y1='11' x2='14' y2='17'></line>
+    </svg>`;
+    binEl.addEventListener('dragover', e => {
+      if (draggedPreset) {
+        e.preventDefault();
+        binEl.classList.add('dragover');
+      }
+    });
+    binEl.addEventListener('dragleave', () => binEl.classList.remove('dragover'));
+    binEl.addEventListener('drop', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      binEl.classList.remove('dragover');
+      if (!draggedPreset) return;
+      draggedPreset.presets.splice(draggedPreset.index, 1);
+      draggedPreset.rerender();
+      draggedPreset = null;
+      saveState();
+    });
+
+    presets.forEach((preset, i) => {
+      const b = document.createElement('button');
+      b.className = 'preset-btn';
+      b.textContent = i + 1;
+      b.title = 'Klicken zum Laden, in den Papierkorb ziehen zum Löschen';
+      b.draggable = true;
+      b.addEventListener('dragstart', e => {
+        draggedPreset = {
+          presets, index: i,
+          rerender: () => renderPresetRow(track, row, label, presets, snapshot, restore, decorate)
+        };
+        e.dataTransfer.setData('application/x-preset-del', '');
+        e.dataTransfer.effectAllowed = 'move';
+        binEl.classList.add('active');
+      });
+      b.addEventListener('dragend', () => {
+        draggedPreset = null;
+        binEl.classList.remove('active');
+      });
+      b.addEventListener('click', () => {
+        restore(preset);
+        renderTracks();
+        saveState();
+      });
+      b.addEventListener('dragover', e => {
+        if (e.dataTransfer.types.includes('application/x-preset-save')) {
+          e.preventDefault();
+          b.classList.add('dragover');
+        }
+      });
+      b.addEventListener('dragleave', () => b.classList.remove('dragover'));
+      b.addEventListener('drop', e => {
+        if (!e.dataTransfer.types.includes('application/x-preset-save')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        b.classList.remove('dragover');
+        presets[i] = snapshot();
+        renderPresetRow(track, row, label, presets, snapshot, restore, decorate);
+        saveState();
+      });
+      if (decorate) decorate(b, preset);
+      row.appendChild(b);
+    });
+
+    row.appendChild(binEl);
+  }
+
   // ---------- UI rendering ----------
   function renderTracks() {
     const container = document.getElementById('tracks');
@@ -610,9 +652,9 @@
 
       // Knob column
       const knobCol = document.createElement('div');
-      knobCol.className = 'knob-col w-full ' + (showKnobs ? 'lg:w-80' : 'lg:w-20');
+      knobCol.className = 'knob-col w-full lg:w-80';
       knobCol.innerHTML = `
-        <div class="knob-row ${showKnobs ? '' : 'minimized'}">
+        <div class="knob-row">
           ${track.knobs.map(k => `
             <div class="knob knob-data" data-key="${k.key}" aria-label="${k.label}">
               <div class="knob-indicator"></div>
@@ -620,7 +662,6 @@
               <div class="knob-value">0</div>
             </div>
           `).join('')}
-          <button class="knob-minimize" aria-label="Toggle knobs">${showKnobs ? collapseIcon : expandIcon}</button>
         </div>
       `;
 
@@ -642,9 +683,55 @@
         stepButtons.push(btn);
       }
 
+      // Preset rows under the steps: sound settings + step pattern
+      const soundRow = document.createElement('div');
+      soundRow.className = 'preset-row';
+      renderPresetRow(track, soundRow, 'Sound', track.presets,
+        () => ({ ...track.params }),
+        preset => { track.params = { ...preset }; },
+        (b, preset) => {
+          track.knobs.forEach((kn, i, arr) => {
+            const k = document.createElement('span');
+            k.className = 'p-knob preset-edge';
+            const pos = edgePos(i, arr.length);
+            k.style.left = pos.left;
+            k.style.top = pos.top;
+            const ind = document.createElement('span');
+            ind.className = 'p-knob-ind';
+            ind.style.transform = `translateX(-50%) rotate(${-135 + (preset[kn.key] || 0) * 270}deg)`;
+            k.appendChild(ind);
+            b.appendChild(k);
+          });
+        });
+
+      const patternRow = document.createElement('div');
+      patternRow.className = 'preset-row';
+      renderPresetRow(track, patternRow, 'Pattern', track.patternPresets,
+        () => [...track.steps],
+        preset => { track.steps = expandSteps(preset, numSteps); },
+        (b, preset) => {
+          preset.forEach((v, i, arr) => {
+            const sq = document.createElement('span');
+            sq.className = 'p-sq preset-edge';
+            const pos = edgePos(i, arr.length);
+            sq.style.left = pos.left;
+            sq.style.top = pos.top;
+            if (Number(v) === 1) sq.style.background = `var(--step-on-${track.color})`;
+            else if (v) sq.style.background = `var(--step-half-${track.color})`;
+            else { sq.style.background = 'var(--step-bg)'; sq.style.border = '1px solid var(--step-border)'; }
+            b.appendChild(sq);
+          });
+        });
+
+      const stepsCol = document.createElement('div');
+      stepsCol.className = 'flex-1 flex flex-col gap-2';
+      stepsCol.appendChild(stepsContainer);
+      stepsCol.appendChild(soundRow);
+      stepsCol.appendChild(patternRow);
+
       root.appendChild(infoCol);
       root.appendChild(knobCol);
-      root.appendChild(stepsContainer);
+      root.appendChild(stepsCol);
       container.appendChild(root);
 
       // Mute
@@ -675,17 +762,6 @@
         if (knobDef) attachKnob(knobEl, track, knobDef);
       });
 
-      // Minimize knobs
-      const minBtn = root.querySelector('.knob-minimize');
-      minBtn.addEventListener('click', () => {
-        showKnobs = !showKnobs;
-        const newWidth = showKnobs ? 'lg:w-80' : 'lg:w-20';
-        document.querySelectorAll('.knob-row').forEach(r => r.classList.toggle('minimized', !showKnobs));
-        document.querySelectorAll('.knob-minimize').forEach(b => b.innerHTML = showKnobs ? collapseIcon : expandIcon);
-        document.querySelectorAll('.knob-col').forEach(c => c.className = 'knob-col w-full ' + newWidth);
-        saveState();
-      });
-
       // Drag & drop / file input
       const trackNameBtn = root.querySelector('.track-name');
       const fileInput = root.querySelector('.file-input');
@@ -697,11 +773,13 @@
 
       // Whole track is a drop target
       let dragCounter = 0;
-      root.addEventListener('dragenter', () => {
+      root.addEventListener('dragenter', e => {
+        if (!e.dataTransfer.types.includes('Files')) return;
         dragCounter++;
         root.classList.add('dragover');
       });
-      root.addEventListener('dragleave', () => {
+      root.addEventListener('dragleave', e => {
+        if (!e.dataTransfer.types.includes('Files')) return;
         dragCounter--;
         if (dragCounter === 0) root.classList.remove('dragover');
       });
@@ -817,15 +895,14 @@
   function saveState() {
     const data = {
       bpm,
-      numSteps,
-      showKnobs,
-      theme: document.body.dataset.theme,
       tracks: tracks.map(track => {
         const t = {
           id: track.id,
           name: track.name,
           steps: track.steps,
           params: track.params,
+          presets: track.presets,
+          patternPresets: track.patternPresets,
           muted: track.muted,
           sample: null
         };
@@ -857,20 +934,12 @@
     if (!raw) return;
     try {
       const data = JSON.parse(raw);
-      if (data.numSteps) {
-        numSteps = data.numSteps;
-        stepsBtn.textContent = numSteps + ' Steps';
-      }
       if (data.bpm) {
         bpm = data.bpm;
         bpmInput.value = bpm;
         bpmVal.textContent = bpm;
       }
-      if (data.showKnobs !== undefined) showKnobs = data.showKnobs;
-      if (data.theme) {
-        document.body.dataset.theme = data.theme;
-        if (themeSelect) themeSelect.value = data.theme;
-      }
+
       for (const st of data.tracks) {
         const track = tracks.find(t => t.id === st.id);
         if (!track) continue;
@@ -882,6 +951,8 @@
           track.steps = track.steps.slice(0, numSteps);
         }
         if (st.params) track.params = { ...track.params, ...st.params };
+        if (st.presets) track.presets = st.presets;
+        if (st.patternPresets) track.patternPresets = st.patternPresets;
         if (st.sample) {
           try {
             track.sampleData = base64ToArrayBuffer(st.sample);
@@ -901,13 +972,11 @@
   }
 
   // ---------- Controls ----------
-  const stepsBtn = document.getElementById('stepsBtn');
-  const defaultBtn = document.getElementById('defaultBtn');
   const playBtn = document.getElementById('playBtn');
   const clearBtn = document.getElementById('clearBtn');
   const bpmInput = document.getElementById('bpm');
   const bpmVal = document.getElementById('bpmVal');
-  const themeSelect = document.getElementById('themeSelect');
+
   async function startPlayback() {
     if (isPlaying) return;
     if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -940,38 +1009,13 @@
     saveState();
   });
 
-  defaultBtn.addEventListener('click', () => {
-    tracks.forEach(track => track.steps = expandSteps(track.defaultSteps || track.steps, numSteps));
-    renderTracks();
-    saveState();
-  });
-
-  stepsBtn.addEventListener('click', () => {
-    if (isPlaying) playBtn.click();
-    numSteps = numSteps === 16 ? 32 : 16;
-    stepsBtn.textContent = numSteps + ' Steps';
-    tracks.forEach(track => {
-      if (numSteps > track.steps.length) {
-        track.steps = [...track.steps, ...new Array(numSteps - track.steps.length).fill(false)];
-      } else {
-        track.steps = track.steps.slice(0, numSteps);
-      }
-    });
-    currentStep = 0;
-    renderTracks();
-    saveState();
-  });
-
   bpmInput.addEventListener('input', e => {
     bpm = parseInt(e.target.value, 10);
     bpmVal.textContent = bpm;
     saveState();
   });
 
-  themeSelect.addEventListener('change', e => {
-    document.body.dataset.theme = e.target.value;
-    saveState();
-  });
+
 
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
