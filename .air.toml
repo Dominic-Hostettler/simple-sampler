@@ -1,0 +1,12 @@
+# Live reload for the Go server: `air`. Only .go files trigger a
+# rebuild; static/ is served from disk (DEV=1), so frontend edits just need a
+# browser refresh. A rebuild restarts the server, which empties all rooms.
+root = "."
+tmp_dir = "tmp"
+env_files = []
+
+[build]
+  cmd = "go build -o ./tmp/server ."
+  full_bin = "DEV=1 ./tmp/server"
+  include_ext = ["go"]
+  exclude_dir = ["static", "tmp"]
