@@ -1,10 +1,10 @@
 // Entry module: renders the tracks and wires up all controls.
 
-import { audioCtx } from './synth.js';
+import { audioCtx, playTrack } from './synth.js';
 import { instruments } from './instruments/index.js';
 import {
   events, state, tracks, fitSteps, canEdit, play, stop, setBpm, shareTrack, resetSound,
-  claimTrack, releaseTrack, addTrack, removeTrack, NUM_STEPS, MAX_TRACKS,
+  claimTrack, releaseTrack, addTrack, removeTrack, NUM_STEPS, MAX_TRACKS, MAX_NOTE,
 } from './sequencer.js';
 import { connect, isOnline, roomId } from './net.js';
 import { saveState, loadState } from './storage.js';
@@ -49,17 +49,83 @@ function updateStepButton(btn, track, step) {
   btn.classList.toggle('current', current);
   btn.dataset.step = step;
   btn.dataset.track = track.id;
+  if (track.instrument.pitched) {
+    btn.classList.add('pitched');
+    btn.textContent = v ? track.instrument.noteLabel(track.params, track.notes[step]) : '';
+  }
+}
+
+const pixelsPerNote = 8;
+const wheelPerNote = 50; // deltaY in pixels
+
+// Drag up or down (or scroll) on a step of a pitched track to change its note.
+// Dragging an empty step turns it on. Every note change is shared at once and
+// previewed. Returns true from wasDrag() once, so the click that ends a drag
+// doesn't also toggle the step.
+function attachNoteDrag(btn, track, s, redraw) {
+  let start = null; // { y, note } while the pointer is down
+  let dragged = false;
+
+  function setNote(note) {
+    note = Math.max(0, Math.min(MAX_NOTE, note));
+    const fields = ['notes'];
+    if (!track.steps[s]) {
+      track.steps[s] = 1;
+      fields.push('steps');
+    }
+    if (note === track.notes[s] && fields.length === 1) return;
+    track.notes[s] = note;
+    redraw();
+    shareTrack(track, ...fields);
+    playTrack(track, audioCtx.currentTime, 1, note);
+    saveState();
+  }
+
+  btn.addEventListener('pointerdown', e => {
+    if (!canEdit(track) || e.button !== 0) return;
+    btn.setPointerCapture?.(e.pointerId);
+    start = { y: e.clientY, note: track.notes[s] };
+    dragged = false;
+  });
+  btn.addEventListener('pointermove', e => {
+    if (!start) return;
+    const dy = start.y - e.clientY;
+    if (!dragged && Math.abs(dy) < pixelsPerNote / 2) return;
+    dragged = true;
+    setNote(start.note + Math.round(dy / pixelsPerNote));
+  });
+  const end = () => { start = null; };
+  btn.addEventListener('pointerup', end);
+  btn.addEventListener('pointercancel', end);
+
+  // Only on steps that are on, so scrolling the page over the track still works
+  let wheel = 0;
+  btn.addEventListener('wheel', e => {
+    if (!canEdit(track) || !track.steps[s]) return;
+    e.preventDefault();
+    wheel += e.deltaMode === 0 ? e.deltaY : e.deltaY * wheelPerNote;
+    const notes = Math.trunc(wheel / wheelPerNote);
+    if (!notes) return;
+    wheel -= notes * wheelPerNote;
+    setNote(track.notes[s] - notes);
+  }, { passive: false });
+
+  return () => {
+    const was = dragged;
+    dragged = false;
+    return was;
+  };
 }
 
 // ---------- Tracks ----------
 // track id -> { track, instrument, root, refresh }; refresh() updates the track's DOM in place
 const trackViews = new Map();
 
-// Changes a field of a track you may edit, then shares, redraws and saves it.
-function editTrack(track, field, change) {
+// Changes one or more fields of a track you may edit, then shares, redraws and saves them.
+function editTrack(track, fields, change) {
   if (!canEdit(track)) return;
   change();
-  shareTrack(track, field);
+  shareTrack(track, ...[fields].flat());
   trackViews.get(track.id).refresh();
   saveState();
 }
@@ -128,8 +194,11 @@ function renderTrack(track) {
   for (let s = 0; s < NUM_STEPS; s++) {
     const btn = document.createElement('button');
     updateStepButton(btn, track, s);
+    const wasDrag = instrument.pitched
+      ? attachNoteDrag(btn, track, s, () => updateStepButton(btn, track, s))
+      : () => false;
     btn.addEventListener('click', () => {
-      if (!canEdit(track)) return;
+      if (wasDrag() || !canEdit(track)) return;
       const v = Number(track.steps[s]);
       track.steps[s] = v === 0 ? 1 : (v === 1 ? 0.25 : 0);
       updateStepButton(btn, track, s);
@@ -186,11 +255,16 @@ function renderTrack(track) {
 
   // Knobs
   const shareKnobs = throttle(() => shareTrack(track, 'params'), 50);
+  // Note labels on the steps depend on the root
+  const onKnob = Object.assign(() => {
+    shareKnobs();
+    if (instrument.pitched) stepButtons.forEach((btn, s) => updateStepButton(btn, track, s));
+  }, { flush: shareKnobs.flush });
   const knobUpdates = [];
   root.querySelectorAll('.knob').forEach(knobEl => {
     const key = knobEl.dataset.key;
     const knobDef = instrument.knobs.find(k => k.key === key);
-    if (knobDef) knobUpdates.push(attachKnob(knobEl, track, knobDef, shareKnobs));
+    if (knobDef) knobUpdates.push(attachKnob(knobEl, track, knobDef, onKnob));
   });
 
   function refresh() {

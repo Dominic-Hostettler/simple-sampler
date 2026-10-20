@@ -2,8 +2,8 @@
 // Click Save to add a preset, drag Save onto a number to overwrite it,
 // click a number to recall it, drag a number onto the bin to delete it.
 //
-// edit(track, field, change) is the UI's way to change a track: it applies
-// change() if the track may be edited, then shares the field, redraws and saves.
+// edit(track, fields, change) is the UI's way to change a track: it applies
+// change() if the track may be edited, then shares the field(s), redraws and saves.
 
 import { MAX_PRESETS } from './sequencer.js';
 
@@ -65,14 +65,19 @@ export function attachSoundPresets(row, track, edit) {
 
 export function attachPatternPresets(row, track, edit) {
   const { instrument } = track;
+  const { pitched } = instrument;
   return attachPresetRow(row, track, edit, {
     list: 'patternPresets',
-    field: 'steps',
+    field: pitched ? ['steps', 'notes'] : 'steps',
     label: 'Pattern',
-    snapshot: () => [...track.steps],
-    restore: preset => { track.steps = [...preset]; },
+    snapshot: () => (pitched ? { steps: [...track.steps], notes: [...track.notes] } : [...track.steps]),
+    restore: preset => {
+      if (!pitched) { track.steps = [...preset]; return; }
+      track.steps = [...preset.steps];
+      track.notes = [...preset.notes];
+    },
     decorate: (b, preset) => {
-      preset.forEach((v, i, arr) => {
+      (pitched ? preset.steps : preset).forEach((v, i, arr) => {
         const sq = document.createElement('span');
         sq.className = 'p-sq preset-edge';
         const pos = edgePos(i, arr.length);
