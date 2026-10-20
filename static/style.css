@@ -21,9 +21,14 @@
   --step-on-yellow-border: #facc15;
   --step-half-yellow: rgba(234, 179, 8, 0.5);
   --step-half-yellow-border: rgba(250, 204, 21, 0.6);
+  --step-on-blue: #3b82f6;
+  --step-on-blue-border: #60a5fa;
+  --step-half-blue: rgba(59, 130, 246, 0.5);
+  --step-half-blue-border: rgba(96, 165, 250, 0.6);
   --glow-green: rgba(34, 197, 94, 0.45);
   --glow-red: rgba(239, 68, 68, 0.45);
   --glow-yellow: rgba(234, 179, 8, 0.45);
+  --glow-blue: rgba(59, 130, 246, 0.45);
   --step-current: #facc15;
   --drop-hover: #22c55e;
   --drop-bg: rgba(34, 197, 94, 0.08);
@@ -136,6 +141,7 @@ body {
 .color-green { color: #4ade80; }
 .color-red { color: #f87171; }
 .color-yellow { color: #facc15; }
+.color-blue { color: #60a5fa; }
 .knob-col { width: 100%; }
 .steps-col { flex: 1 1 0%; display: flex; flex-direction: column; gap: 0.5rem; }
 @media (min-width: 768px) {
@@ -167,9 +173,13 @@ body {
 .step.on-green { background: var(--step-on-green); border-color: var(--step-on-green-border); box-shadow: 0 0 10px var(--glow-green); }
 .step.on-red { background: var(--step-on-red); border-color: var(--step-on-red-border); box-shadow: 0 0 10px var(--glow-red); }
 .step.on-yellow { background: var(--step-on-yellow); border-color: var(--step-on-yellow-border); box-shadow: 0 0 10px var(--glow-yellow); }
+.step.on-blue { background: var(--step-on-blue); border-color: var(--step-on-blue-border); box-shadow: 0 0 10px var(--glow-blue); }
 .step.half-green { background: var(--step-half-green); border-color: var(--step-half-green-border); }
 .step.half-red { background: var(--step-half-red); border-color: var(--step-half-red-border); }
 .step.half-yellow { background: var(--step-half-yellow); border-color: var(--step-half-yellow-border); }
+.step.half-blue { background: var(--step-half-blue); border-color: var(--step-half-blue-border); }
+/* Pitched steps: drag up or down (or scroll) to change the note */
+.step.pitched { touch-action: none; padding: 0; font-size: 0.625rem; font-weight: 600; color: #f3f4f6; overflow: hidden; }
 .step.current { outline: 2px solid var(--step-current); outline-offset: 2px; }
 .preset-row { display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
 .save-btn, .preset-btn {

@@ -1,6 +1,6 @@
 # Simpel Sampler
 
-Multiplayer drum machine in the browser: synthesized kick, snare and hi-hat, 16 steps, shared live
+Multiplayer drum machine in the browser: synthesized kick, snare, hi-hat and bass, 16 steps, shared live
 with everyone in a room. The beat is synced, not streamed: a small Go server orders the writes and
 provides a clock, each browser plays locally with Web Audio.
 
@@ -24,7 +24,8 @@ Go 1.27, no frontend build step. Install air with `go install github.com/air-ver
 ## Adding an instrument
 
 Add a module to `static/instruments/` (like `kick.js`) and list it in `instruments/index.js`.
-The server doesn't know about instruments.
+Pitched instruments (like `bass.js`) also get a note per step: drag a step up or down, or scroll
+on it. The server doesn't know about instruments.
 
 ## Limits
 

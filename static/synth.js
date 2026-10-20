@@ -39,8 +39,12 @@ export function waveAt(v) {
   return waveTypes[Math.min(waveTypes.length - 1, Math.floor(v * waveTypes.length))];
 }
 
-export function playTrack(track, time, stepGain = 1) {
+// Cut functions of the hits still sounding, by track
+const voices = new WeakMap();
+
+export function playTrack(track, time, stepGain = 1, note = 0) {
   if (track.muted) return;
+  voices.get(track)?.(time);
   let destination = master;
   const curve = distortionCurve(track.params.distortion);
   if (curve) {
@@ -49,5 +53,5 @@ export function playTrack(track, time, stepGain = 1) {
     destination.oversample = '4x';
     destination.connect(master);
   }
-  track.instrument.play(audioCtx, time, track.params, stepGain, destination);
+  voices.set(track, track.instrument.play(audioCtx, time, track.params, stepGain, destination, note));
 }

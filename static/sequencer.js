@@ -15,6 +15,7 @@ export const events = new EventTarget();
 export const NUM_STEPS = 16;
 export const MAX_PRESETS = 16; // per row, keeps the shared track value small
 export const MAX_TRACKS = 8;   // same limit as the server
+export const MAX_NOTE = 24;    // semitones above the root of pitched instruments
 
 export const state = {
   // Shared transport, in server time (ms). Step n plays at
@@ -35,7 +36,7 @@ function ownerOf(id) {
 function makeTrack(id, v) {
   return {
     id,
-    ...v,               // instrument, steps, params, muted, presets, patternPresets
+    ...v,               // instrument, steps, notes (pitched only), params, muted, presets, patternPresets
     owner: ownerOf(id), // 'me', 'other' or null when free
     pending: {},        // own writes per field still waiting for the server's reply
   };
@@ -44,13 +45,13 @@ function makeTrack(id, v) {
 // The shared value of a track, also what localStorage keeps.
 export function trackValue(track) {
   return {
-    instrument: track.instrument.id, steps: track.steps, params: track.params, muted: track.muted,
+    instrument: track.instrument.id, steps: track.steps, notes: track.notes, params: track.params, muted: track.muted,
     presets: track.presets, patternPresets: track.patternPresets,
   };
 }
 
-function newTrackValue(instrument, steps = []) {
-  return { instrument: instrument.id, steps, params: { ...instrument.params } };
+function newTrackValue(instrument, steps = [], notes = []) {
+  return { instrument: instrument.id, steps, notes, params: { ...instrument.params } };
 }
 
 // Replaces the tracks with local ones (saved or the default kit), numbered from 0.
@@ -96,7 +97,7 @@ function toAudioTime(serverMs) {
 // ---------- Scheduler ----------
 function scheduleNote(step, time) {
   tracks.forEach(track => {
-    if (track.steps[step]) playTrack(track, time, track.steps[step]);
+    if (track.steps[step]) playTrack(track, time, track.steps[step], track.notes?.[step]);
   });
 }
 
@@ -156,6 +157,17 @@ function cleanSteps(steps) {
   return fitSteps(steps.map(s => (s === true || s === 1 ? 1 : s === 0.25 ? 0.25 : 0)));
 }
 
+function cleanNotes(notes) {
+  if (!Array.isArray(notes)) notes = [];
+  return Array.from({ length: NUM_STEPS }, (_, i) => (Number.isInteger(notes[i]) ? clamp(notes[i], 0, MAX_NOTE) : 0));
+}
+
+// A pattern preset is the steps, or for pitched instruments { steps, notes }
+function cleanPattern(instrument, p) {
+  if (!instrument.pitched) return cleanSteps(Array.isArray(p) ? p : p?.steps);
+  return { steps: cleanSteps(Array.isArray(p) ? p : p?.steps), notes: cleanNotes(p?.notes) };
+}
+
 function cleanPresets(list, clean) {
   return Array.isArray(list) ? list.slice(0, MAX_PRESETS).map(clean) : [];
 }
@@ -169,10 +181,11 @@ function cleanTrack(v) {
   return {
     instrument,
     steps: cleanSteps(v.steps),
+    notes: instrument.pitched ? cleanNotes(v.notes) : undefined,
     params: cleanParams(instrument, v.params),
     muted: v.muted === true,
     presets: cleanPresets(v.presets, p => cleanParams(instrument, p)),
-    patternPresets: cleanPresets(v.patternPresets, cleanSteps),
+    patternPresets: cleanPresets(v.patternPresets, p => cleanPattern(instrument, p)),
   };
 }
 
@@ -359,4 +372,4 @@ export function removeTrack(track) {
 export function claimTrack(track) { claim(track.id); }
 export function releaseTrack(track) { release(track.id); }
 
-loadTracks(defaultKit.map(instrument => newTrackValue(instrument, instrument.steps)));
+loadTracks(defaultKit.map(instrument => newTrackValue(instrument, instrument.steps, instrument.notes)));
